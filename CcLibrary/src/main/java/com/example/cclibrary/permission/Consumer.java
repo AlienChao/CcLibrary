@@ -2,6 +2,8 @@ package com.example.cclibrary.permission;
 
 
 
+import android.app.AlertDialog;
+
 import java.util.List;
 
 /**
@@ -20,5 +22,10 @@ public abstract  class Consumer implements IPermission {
     @Override
     public void noPermission(List<String> denied, boolean quick, List<String> quickStr) {
 
+    }
+
+    @Override
+    public AlertDialog.Builder getBuilder(String permissionName) {
+        return null;
     }
 }

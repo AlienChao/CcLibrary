@@ -42,6 +42,10 @@ public final class PermissionFragment extends Fragment implements Runnable {
     private final static SparseArray<Consumer> sContainer = new SparseArray<>();
     private Context mContext;
 
+    public static AlertDialog.Builder customerBuilder;
+    public static Dialog customDialog;
+    public static IQuickDialogListener iQuickDialogListener = null;
+
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
@@ -124,7 +128,7 @@ public final class PermissionFragment extends Fragment implements Runnable {
      * 请求权限
      */
     public void requestPermission() {
-        if (PermissionUtils.isOverMarshmallow()&&isAdded()) {
+        if (PermissionUtils.isOverMarshmallow() && isAdded()) {
             ArrayList<String> permissions = getArguments().getStringArrayList(PERMISSION_GROUP);
             requestPermissions(permissions.toArray(new String[permissions.size() - 1]), getArguments().getInt(REQUEST_CODE));
         }
@@ -195,55 +199,12 @@ public final class PermissionFragment extends Fragment implements Runnable {
             if (isQuick) {
                 String checkDeniedStr = PermissionUtils.getCheckDeniedStr(getActivity(), failPermissions);
                 Log.i("jsc", "onRequestPermissionsResult: " + checkDeniedStr);
+                String permissionName = PermissionName.getPermissionName(checkDeniedStr);
+                Dialog customDialog1 = getCustomDialog(call, permissionName);
+                if(customDialog1!=null){
+                    customDialog1.show();
+                }
 
-
-//                new MessageDialog.Builder(getActivity()).setMessage("为了保证您正常的使用App，请允许我们获取您的" + PermissionName.getPermissionName(checkDeniedStr) + "权限").setListener(new MessageDialog.OnListener() {
-//                    @Override
-//                    public void onConfirm(Dialog dialog) {
-//                        CcPermissions.gotoPermissionSettings(mContext, false);
-//                    }
-//
-//                    @Override
-//                    public void onCancel(Dialog dialog) {
-//
-//                    }
-//                }).show();
-
-                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity())
-                        //.setTitle("提示")
-                        .setCancelable(false)
-                        .setMessage("为了保证您正常的使用App，请允许我们获取您的" + PermissionName.getPermissionName(checkDeniedStr) + "权限")
-                        .setPositiveButton("确定", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        CcPermissions.gotoPermissionSettings(mContext, false);
-                    }
-                }).setNegativeButton("取消", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
-                    }
-                });
-                builder.create().show();
-
-
-//                DialogUtils
-//                        .getInstance(getActivity())
-//                        .setTitle("为了保证您正常的使用App，请允许我们获取您的" +PermissionName.getPermissionName(checkDeniedStr)  + "权限")
-//                        .getDialog(new DialogUtils.InterfaceClickCc() {
-//
-//
-//                            @Override
-//                            public void onLeftClick() {
-//
-//                            }
-//
-//                            @Override
-//                            public void onRightClick(Context context) {
-//                                CcPermissions.gotoPermissionSettings(mContext, false);
-//                            }
-//
-//                        });
             }
 
 
@@ -256,6 +217,37 @@ public final class PermissionFragment extends Fragment implements Runnable {
         //权限回调结束后要删除集合中的对象，避免重复请求
         sContainer.remove(requestCode);
         getFragmentManager().beginTransaction().remove(this).commit();
+    }
+
+
+    private Dialog getCustomDialog( IPermission call,String permissionName){
+
+        if (call.getBuilder(permissionName) != null) {
+             return call.getBuilder(permissionName).create();
+        }
+
+        if (iQuickDialogListener != null) {
+            iQuickDialogListener.showQuickDialog(permissionName);
+            return null;
+        }
+
+        customerBuilder = new AlertDialog.Builder(getActivity())
+                //.setTitle("提示")
+                .setCancelable(false)
+                .setMessage("为了保证您正常的使用App，请允许我们获取您的" + permissionName + "权限")
+                .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        CcPermissions.gotoPermissionSettings(mContext, false);
+                    }
+                }).setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.dismiss();
+                    }
+                });
+       return customerBuilder.create();
+
     }
 
     /**

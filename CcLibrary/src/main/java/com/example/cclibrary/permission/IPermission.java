@@ -1,5 +1,7 @@
 package com.example.cclibrary.permission;
 
+import android.app.AlertDialog;
+
 import java.util.List;
 
 /**
@@ -33,5 +35,6 @@ public interface IPermission {
      */
     void noPermission(List<String> denied, boolean quick, List<String> quickStr);
 
+    AlertDialog.Builder getBuilder(String permissionName);
 
 }
